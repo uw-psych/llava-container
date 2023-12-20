@@ -23,7 +23,6 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	micromamba install -y -n base python={{ PYTHON_VERSION }} -c conda-forge pip
 	micromamba run -n base python -m pip install --no-cache-dir --upgrade pip
 	micromamba run -n base python -m pip install --no-cache-dir git+https://github.com/haotian-liu/LLaVA.git
-	micromamba run -n base python -m pip install --no-cache-dir 'typer[all]'
 	micromamba run -n base python -m pip cache purge
 	micromamba clean --all --yes
 
@@ -33,13 +32,8 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-}"
 
 %runscript
-	if [ $# -gt 0 ]; then
-	# If arguments are provided, run llava-run with those arguments:
-		exec micromamba run -n base /opt/local/bin/llava-run "$@"
-	else
-	# If no arguments are provided, run the provided command in the base environment:
-		exec micromamba run -n base "$@"
-	fi
+	# Run the script "llava-run" with the arguments provided:
+	exec micromamba run -n base /opt/local/bin/llava-run "$@"
 
 %help
 	This container provides a convenient way to run
