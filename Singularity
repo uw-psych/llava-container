@@ -32,15 +32,15 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-}"
 
 %runscript
-	# Run the script "llava-run" with the arguments provided:
-	exec micromamba run -n base /opt/local/bin/llava-run "$@"
+	# Run the provided command with the micromamba base environment activated:
+	exec micromamba run --no-capture-output -n base "$@"
 
 %help
 	This container provides a convenient way to run
 	[LLaVA](https://github.com/haotian-liu/LLaVA).
 
-	To run LLaVA, use the following command:
-		apptainer run --nv llava-container.sif
+	To run LLaVA with the `llava-run` script, use the following command:
+		apptainer run --nv llava-container.sif llava-run [arguments]
 	
 	You must pass the "--nv" flag to enable GPU support.
 
@@ -51,11 +51,10 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	To specify a directory to use for the HuggingFace model cache, use the
 	following command:
 		apptainer run --nv --env HUGGINGFACE_HUB_CACHE=/path/to/cache \
-			llava-container.sif
+			llava-container.sif llava-run
 		
-	By default, the container will run the script "llava-run.py" (from this
-	repository) with the arguments provided. The following describes the usage
-	of this script:
+	This container includes a script called "llava-run" that runs LLaVA with the
+	arguments provided. The following describes the usage of this script:
 
 		llava-run [-h] [--model-path MODEL_PATH] [--model-base MODEL_BASE]
 			--image-file IMAGE_FILE --query QUERY [--conv-mode CONV_MODE]

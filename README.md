@@ -5,7 +5,7 @@ This container provides a convenient way to run [LLaVA](https://github.com/haoti
 To run LLaVA using [Apptainer](https://apptainer.org/docs/user/main/index.html), run the following command:
 
 ```bash
-apptainer run --nv oras://ghcr.io/uw-psych/llava-container:v0.0.1
+apptainer run --nv --writable-tmpfs oras://ghcr.io/uw-psych/llava-container/llava-container:0.0.1 llava-run
 ```
 
 You **must** pass the `--nv` flag to enable GPU support.
@@ -15,12 +15,16 @@ Depending on your intended use, you may also want to pass the `--bind` flag to m
 To specify a directory to use for the HuggingFace model cache, you can pass the `--env` flag to set the `HUGGINGFACE_HUB_CACHE` environment variable. For example:
 
 ```bash
-apptainer run --nv --env HUGGINGFACE_HUB_CACHE=/path/to/cache oras://ghcr.io/uw-psych/llava-container:v0.0.1
+apptainer run --nv --writable-tmpfs --env HUGGINGFACE_HUB_CACHE=/path/to/cache oras://ghcr.io/uw-psych/llava-container/llava-container:0.0.1
 ```
 
-By default, the container will run the script `llava-run.py` (from this repository) with the arguments provided. 
-
 The `llava-run.py` script is a modification of `LLaVA/lava/eval/run_llava.py` that adds support for loading 4- and 8-bit models as found in `LaVA/llava/serve/cli.py`.
+
+If you want to use a different command, you can pass it after the image name:
+
+```bash
+apptainer run --nv --writable-tmpfs --env HUGGINGFACE_HUB_CACHE=/path/to/cache oras://ghcr.io/uw-psych/llava-container/llava-container:0.0.1 python -m llava.serve.cli
+```
 
 ## Running LLaVA on Klone
 
@@ -50,14 +54,18 @@ export APPTAINER_CACHEDIR="${APPTAINER_CACHEDIR:-/gscratch/scrubbed/${USER}/appt
 # Run LLaVA:
 apptainer run \
     --nv \
-    --env HUGGINGFACE_HUB_CACHE=/gscratch/scrubbed/${USER}/hf-cache" \
-    oras://ghcr.io/uw-psych/llava-container:v0.0.1 \
+    --writable-tmpfs \
+    --env HUGGINGFACE_HUB_CACHE=/gscratch/scrubbed/${USER}/hf-cache \
+    oras://ghcr.io/uw-psych/llava-container/llava-container:0.0.1 \
+    llava-run \
     --model-path liuhaotian/llava-v1.5-7b \
     --image-file "https://llava-vl.github.io/static/images/view.jpg" \
     --query "What's going on here?"
 # --nv: enable GPU support
+# --writable-tmpfs: ensure /tmp is writable
 # --env: set the HuggingFace cache directory
-#   oras://ghcr.io/uw-psych/llava-container:v0.0.1: URL of the container image
+#   oras://ghcr.io/uw-psych/llava-container/llava-container:0.0.1: The container
+#   llava-run: the command to run in the container
 # --model-path: the name of the model to use
 # --image-file: the URL of the image to use
 # --query: what to ask the model
