@@ -33,10 +33,14 @@ jobs:
         uses: actions/checkout@v4
       - name: Build Container
         run: |
+          set -eux
           apptainer build --fix-perms container.sif Singularity
       - name: Push Container
         run: |
+          set -eux
           TAG=${{ github.ref_name }}
           TAG=${TAG:-latest}
           TAG="${TAG##*@}"
-          apptainer push container.sif oras://ghcr.io/${{ github.repository }}:${TAG}
+          DST="oras://ghcr.io/${{ github.repository }}:${TAG}"
+          echo "Pushing to \"${DST}\"" >&2
+          apptainer push container.sif "${DST}"
