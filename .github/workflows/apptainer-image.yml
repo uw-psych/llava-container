@@ -36,6 +36,8 @@ jobs:
           set -eux
           apptainer build --fix-perms container.sif Singularity
       - name: Push Container
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -eux
           TAG=${{ github.ref_name }}
