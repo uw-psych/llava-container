@@ -18,16 +18,21 @@ jobs:
           echo "APPTAINER_VERSION=$APPTAINER_VERSION" >> $GITHUB_ENV
           SETUP_DOWNLOADS_DIR=.setup-downloads
           echo "SETUP_DOWNLOADS_DIR=$SETUP_DOWNLOADS_DIR" >> $GITHUB_ENV
-      - name: Restore Apptainer download cache
+          mkdir -p "${SETUP_DOWNLOADS_DIR}"
+      - name: Restore download cache
+        id: cache-downloads
         uses: actions/cache@v3
         with:
           path: ${{ env.SETUP_DOWNLOADS_DIR }}
           key: ${{ runner.os }}-apptainer-${{ env.APPTAINER_VERSION }}
+      - name: Download Apptainer
+        if: steps.cache-downloads.outputs.cache-hit != 'true'
+        run: |
+          set -eux
+          [ -r "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" ] || curl -o "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" -L
       - name: Install Apptainer
         run: |
           set -eux
-          mkdir -p "${SETUP_DOWNLOADS_DIR}"
-          [ -r "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" ] || curl -o "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" -L https://github.com/apptainer/apptainer/releases/download/v${APPTAINER_VERSION}/apptainer_${APPTAINER_VERSION}_amd64.deb
           sudo apt install -y "./${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb"
       - name: Check out code for the container build
         uses: actions/checkout@v4
