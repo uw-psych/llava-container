@@ -47,6 +47,9 @@ write_apptainer_labels() {
 		fi
 	fi
 
+	# Try to set image author from GITHUB_REPOSITORY_OWNER if not set:
+	IMAGE_AUTHOR="${IMAGE_AUTHOR:-${GITHUB_REPOSITORY_OWNER:-}}"
+
 	# If no image author is set, try to set it to the git author via git config:
 	if [ -z "${IMAGE_AUTHOR:-}" ] && command -v git >/dev/null 2>&1; then
 		[ -n "${IMAGE_AUTHOR_EMAIL:-}" ] || IMAGE_AUTHOR_EMAIL="$(git config --get user.email || git config --get github.email || true)"
@@ -60,9 +63,10 @@ write_apptainer_labels() {
 	write_to_build_labels "org.label-schema.vcs-ref" "org.opencontainers.image.revision" "${IMAGE_VCS_REF:-}"
 	write_to_build_labels "org.label-schema.vcs-url" "org.opencontainers.image.source" "${IMAGE_VCS_URL:-}"
 	write_to_build_labels "org.label-schema.vendor" "org.opencontainers.image.vendor" "${IMAGE_VENDOR:-}"
-	write_to_build_labels "MAINTAINER" "org.opencontainers.image.authors" "${IMAGE_AUTHOR:-}"
+	write_to_build_labels "MAINTAINER" "maintainer" "org.opencontainers.image.authors" "${IMAGE_AUTHOR:-}"
 	write_to_build_labels "org.label-schema.description" "org.opencontainers.image.description" "${IMAGE_DESCRIPTION:-}"
 	write_to_build_labels "org.label-schema.usage" "org.opencontainers.image.documentation" "${IMAGE_DOCUMENTATION:-}"
+	write_to_build_labels "org.label-schema.version" "org.opencontainers.image.version" "${IMAGE_VERSION:-}"
 }
 
 ! (return 0 2>/dev/null) || write_apptainer_labels "$@"
