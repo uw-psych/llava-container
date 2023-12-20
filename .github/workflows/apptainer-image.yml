@@ -18,7 +18,6 @@ jobs:
           echo "APPTAINER_VERSION=$APPTAINER_VERSION" >> $GITHUB_ENV
           SETUP_DOWNLOADS_DIR=.setup-downloads
           echo "SETUP_DOWNLOADS_DIR=$SETUP_DOWNLOADS_DIR" >> $GITHUB_ENV
-          mkdir -p "$SETUP_DOWNLOADS_DIR"
       - name: Restore Apptainer download cache
         uses: actions/cache@v3
         with:
