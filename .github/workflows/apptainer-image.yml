@@ -33,6 +33,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Build Container
         run: |
-          apptainer build container.sif Singularity
-        
-          # Build the container alocontainer.sif oras://ghcr.io/${{ github.repository }}:${{github.ref_name}}
+          apptainer build --fix-perms container.sif Singularity
+      - name: Push Container
+        run: |
+          TAG=${{ github.ref_name }}
+          TAG=${TAG:-latest}
+          TAG="${TAG##*@}"
+          apptainer push container.sif oras://ghcr.io/${{ github.repository }}:${TAG}
