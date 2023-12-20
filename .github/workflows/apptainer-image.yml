@@ -29,7 +29,7 @@ jobs:
         if: steps.cache-downloads.outputs.cache-hit != 'true'
         run: |
           set -eux
-          [ -r "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" ] || curl -o "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" -L
+          [ -r "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" ] || curl -o "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" -L https://github.com/apptainer/apptainer/releases/download/v${APPTAINER_VERSION}/apptainer_${APPTAINER_VERSION}_amd64.deb
       - name: Install Apptainer
         run: |
           set -eux
