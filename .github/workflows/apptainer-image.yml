@@ -27,7 +27,7 @@ jobs:
           key: ${{ runner.os }}-apptainer-${{ env.APPTAINER_VERSION }}
       - name: Install Apptainer
         run: |
-          set -eux
+          set -ux
           curl -o "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" -L https://github.com/apptainer/apptainer/releases/download/v${APPTAINER_VERSION}/apptainer_${APPTAINER_VERSION}_amd64.deb && \
           sudo dpkg -i "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" && \
           sudo apt-get install -f -y
