@@ -38,7 +38,6 @@ jobs:
           du -h container.sif >&2
           echo "Container labels:" >&2
           apptainer inspect container.sif >&2
-
       - name: Push Container
         run: |
           set -eux
