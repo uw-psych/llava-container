@@ -27,7 +27,7 @@ jobs:
       - name: Install Apptainer
         run: |
           set -eux
-          curl -o "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" -L https://github.com/apptainer/apptainer/releases/download/v${APPTAINER_VERSION}/apptainer_${APPTAINER_VERSION}_amd64.deb && \
+          [ -r "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" ] || curl -o "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" -L https://github.com/apptainer/apptainer/releases/download/v${APPTAINER_VERSION}/apptainer_${APPTAINER_VERSION}_amd64.deb
           sudo apt install -y "./${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb"
       - name: Check out code for the container build
         uses: actions/checkout@v4
