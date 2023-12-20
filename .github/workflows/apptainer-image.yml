@@ -1,0 +1,42 @@
+name: Apptainer Build
+on:
+  push:
+    tags:
+      - latest
+      - v*
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    name: Build Apptainer image
+    permissions:
+        contents: read
+        packages: write
+    steps:
+      - name: Set Apptainer download version
+        run: |
+          APPTAINER_VERSION=1.2.5
+          echo "APPTAINER_VERSION=\"$APPTAINER_VERSION\"" >> $GITHUB_ENV
+          SETUP_DOWNLOADS_DIR=.setup-downloads
+          echo "SETUP_DOWNLOADS_DIR=\"$SETUP_DOWNLOADS_DIR\"" >> $GITHUB_ENV
+          mkdir -p "$SETUP_DOWNLOADS_DIR"
+      - name: Restore Apptainer download cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.SETUP_DOWNLOADS_DIR }}
+          key: ${{ runner.os }}-apptainer-${{ env.APPTAINER_VERSION }}0
+      - name: Install Apptainer
+        run: curl -o "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" -L https://github.com/apptainer/apptainer/releases/download/v${APPTAINER_VERSION}/apptainer_${APPTAINER_VERSION}_amd64.deb) && sudo apt install -y "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb"; rm -f "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb"
+      - name: Check out code for the container build
+        uses: actions/checkout@v4
+      - name: Build Container
+        run: |
+          apptainer build container.sif Singularity
+        
+          # Build the container and name by tag
+          echo "Tag is \"$tag.\"" 
+          echo "tag=\"$tag\"" >> $GITHUB_ENV
+      - name: Login and Deploy Container
+        run: |
+          apptainer remote login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} oras://ghcr.io
+          apptainer push container.sif oras://ghcr.io/${{ github.repository }}:${{github.ref_name}}

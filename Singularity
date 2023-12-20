@@ -1,0 +1,92 @@
+Bootstrap: docker
+From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
+
+%arguments
+	MICROMAMBA_TAG=jammy-cuda-12.3.1
+	PYTHON_VERSION=3.11
+
+%setup
+	[ -n "${APPTAINER_ROOTFS:-}" ] && ./write-apptainer-labels.sh > "${APPTAINER_ROOTFS}/.build_labels"
+
+%files
+	llava-run.py /opt/local/bin/llava-run
+
+%post
+	set -eux
+	export MAMBA_DOCKERFILE_ACTIVATE=1
+	export DEBIAN_FRONTEND=noninteractive
+	apt-get update -y && apt-get install -y --no-install-recommends \
+		ca-certificates \
+		curl \
+		git
+	apt-get clean -y && rm -rf /var/lib/apt/lists/*
+	micromamba install -y -n base python={{ PYTHON_VERSION }} -c conda-forge pip
+	micromamba run -n base python -m pip install --no-cache-dir --upgrade pip
+	micromamba run -n base python -m pip install --no-cache-dir git+https://github.com/haotian-liu/LLaVA.git
+	micromamba run -n base python -m pip install --no-cache-dir 'typer[all]'
+	micromamba run -n base python -m pip cache purge
+	micromamba clean --all --yes
+
+%environment
+	export MAMBA_DOCKERFILE_ACTIVATE=1
+	export PATH="/opt/local/bin:$PATH"
+	export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-}"
+
+%runscript
+	if [ $# -gt 0 ]; then
+	# If arguments are provided, run llava-run with those arguments:
+		exec micromamba run -n base /opt/local/bin/llava-run "$@"
+	else
+	# If no arguments are provided, run the provided command in the base environment:
+		exec micromamba run -n base "$@"
+	fi
+
+%help
+	This container provides a convenient way to run
+	[LLaVA](https://github.com/haotian-liu/LLaVA).
+
+	To run LLaVA, use the following command:
+		apptainer run --nv llava-container.sif
+	
+	You must pass the "--nv" flag to enable GPU support.
+
+	Depending on your intended use, you may also want to pass the "--bind" flag
+	to mount a directory from the host system into the container, or add flags
+	like "--contain" or "--cleanenv" to change the container runtime behavior.
+	
+	To specify a directory to use for the HuggingFace model cache, use the
+	following command:
+		apptainer run --nv --env HUGGINGFACE_HUB_CACHE=/path/to/cache \
+			llava-container.sif
+		
+	By default, the container will run the script "llava-run.py" (from this
+	repository) with the arguments provided. The following describes the usage
+	of this script:
+
+		llava-run [-h] [--model-path MODEL_PATH] [--model-base MODEL_BASE]
+			--image-file IMAGE_FILE --query QUERY [--conv-mode CONV_MODE]
+			[--sep SEP] [--temperature TEMPERATURE] [--top_p TOP_P]
+			[--num_beams NUM_BEAMS] [--max_new_tokens MAX_NEW_TOKENS]
+			[--load-8bit] [--load-4bit] [--device DEVICE]
+			[--hf-cache-dir HF_CACHE_DIR]
+
+		options:
+			-h, --help				show this help message and exit
+			--model-path MODEL_PATH Model path
+			--model-base MODEL_BASE Model base
+			--image-file IMAGE_FILE Image file
+			--query QUERY         Query
+			--conv-mode CONV_MODE Conversation mode
+			--sep SEP             Separator for image files
+			--temperature TEMPERATURE Temperature
+			--top_p TOP_P         Top p
+			--num_beams NUM_BEAMS Number of beams
+			--max_new_tokens MAX_NEW_TOKENS
+									Max new tokens
+			--load-8bit           Load 8bit model
+			--load-4bit           Load 4bit model
+			--device DEVICE       cuda or cpu
+			--hf-cache-dir HF_CACHE_DIR HuggingFace cache directory
+		
+		For details on the arguments, see the LLaVA documentation.
+
