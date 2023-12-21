@@ -31,7 +31,7 @@ apptainer run --nv --writable-tmpfs --env HUGGINGFACE_HUB_CACHE=/path/to/cache o
 Here is a complete example of running LLaVA on the [Klone](https://uw-psych.github.io/compute_docs/docs/compute/slurm.html) SLURM cluster:
 
 ```bash
-# Request a GPU node with 2 GPUs, 64GB of RAM, and 1 hour of runtime:
+# Request a GPU node with 8 CPUs, 2 GPUs, 64GB of RAM, and 1 hour of runtime:
 # (Note: you may need to change the account and partition)
 salloc --account escience --partition gpu-a40 --mem 64G -c 8 --time 1:00:00 --gpus 2
 
