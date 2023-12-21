@@ -34,9 +34,11 @@ Here is a complete example of running LLaVA on the [Klone](https://uw-psych.gith
 # Request a GPU node with 8 CPUs, 2 GPUs, 64GB of RAM, and 1 hour of runtime:
 # (Note: you may need to change the account and partition)
 salloc --account escience --partition gpu-a40 --mem 64G -c 8 --time 1:00:00 --gpus 2
+```
 
-# When logged in to the compute node:
+Then, **when logged in to the compute node**:
 
+```bash
 # Check if Apptainer is available; load the default Lmod if it's not:
 command -v apptainer 2>&1 >/dev/null || module load apptainer 
 
@@ -55,6 +57,7 @@ export APPTAINER_CACHEDIR="${APPTAINER_CACHEDIR:-/gscratch/scrubbed/${USER}/appt
 apptainer run \
     --nv \
     --writable-tmpfs \
+    --bind /gscratch \
     --env HUGGINGFACE_HUB_CACHE=/gscratch/scrubbed/${USER}/hf-cache \
     oras://ghcr.io/uw-psych/llava-container/llava-container:0.0.1 \
     llava-run \
@@ -63,6 +66,7 @@ apptainer run \
     --query "What's going on here?"
 # --nv: enable GPU support
 # --writable-tmpfs: ensure /tmp is writable
+# --bind /gscratch: ensure /gscratch is accessible
 # --env: set the HuggingFace cache directory
 #   oras://ghcr.io/uw-psych/llava-container/llava-container:0.0.1: The container
 #   llava-run: the command to run in the container
