@@ -33,14 +33,16 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 
 %runscript
 	# Run the provided command with the micromamba base environment activated:
-	exec micromamba run --no-capture-output -n base "$@"
+	eval "$(micromamba shell hook --shell posix)"
+	micromamba activate
+	exec "$@"
 
 %help
 	This container provides a convenient way to run
 	[LLaVA](https://github.com/haotian-liu/LLaVA).
 
 	To run LLaVA with the `llava-run` script, use the following command:
-		apptainer run --nv llava-container.sif llava-run [arguments]
+		apptainer run --nv --writable-tmpfs llava-container.sif llava-run
 	
 	You must pass the "--nv" flag to enable GPU support.
 
@@ -52,7 +54,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	following command:
 		apptainer run --nv --env HUGGINGFACE_HUB_CACHE=/path/to/cache \
 			llava-container.sif llava-run
-		
+	
 	This container includes a script called "llava-run" that runs LLaVA with the
 	arguments provided. The following describes the usage of this script:
 

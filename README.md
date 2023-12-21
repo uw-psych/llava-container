@@ -73,7 +73,6 @@ apptainer run \
 
 # When you're done, exit the compute node:
 exit
-
 ```
 
 This is what the sample image looks like:
