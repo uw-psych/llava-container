@@ -4,6 +4,9 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 %arguments
 	MICROMAMBA_TAG=jammy-cuda-12.3.1
 	PYTHON_VERSION=3.11
+	LLAVA_REPO=https://github.com/haotian-liu/LLaVA
+	LLAVA_TAG=v1.1.3
+	DASEL_URL=https://github.com/TomWright/dasel/releases/download/v2.5.0/dasel_linux_amd64
 
 %setup
 	[ -n "${APPTAINER_ROOTFS:-}" ] && ./write-apptainer-labels.sh > "${APPTAINER_ROOTFS}/.build_labels"
@@ -12,7 +15,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	llava-run.py /opt/local/bin/llava-run
 
 %post
-	set -eux
+	set -ex
 	export MAMBA_DOCKERFILE_ACTIVATE=1
 	export DEBIAN_FRONTEND=noninteractive
 	apt-get update -y && apt-get install -y --no-install-recommends \
@@ -20,11 +23,21 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 		curl \
 		git
 	apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+	mkdir -p /opt/setup && cd "$_"
+	curl -fL "{{ DASEL_URL }}" -o /opt/setup/dasel && chmod +x /opt/setup/dasel
+	cd /opt/setup && git clone --branch {{ LLAVA_TAG }} --single-branch --depth 1 {{ LLAVA_REPO }} llava-src && cd llava-src
+
+	# Add setuptools-scm to pyproject.toml
+	/opt/setup/dasel put -f pyproject.toml -t string -v setuptools-scm -s 'build-system.requires.append()'
+
 	micromamba install -y -n base python={{ PYTHON_VERSION }} -c conda-forge pip
 	micromamba run -n base python -m pip install --no-cache-dir --upgrade pip
-	micromamba run -n base python -m pip install --no-cache-dir git+https://github.com/haotian-liu/LLaVA.git
+	micromamba run -n base python -m pip install --no-cache-dir .
 	micromamba run -n base python -m pip cache purge
 	micromamba clean --all --yes
+
+	rm -rf /opt/setup
 
 %environment
 	export MAMBA_DOCKERFILE_ACTIVATE=1
