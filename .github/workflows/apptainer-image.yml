@@ -36,7 +36,7 @@ jobs:
           apptainer build --disable-cache --fix-perms --force "${IMAGE_PATH}" Singularity
           echo "Container built successfully" >&2
           echo "Container size:" >&2
-          du -h ""${IMAGE_PATH}" >&2
+          du -h "${IMAGE_PATH}" >&2
           echo "Container labels:" >&2
           apptainer inspect "${IMAGE_PATH}" >&2
           echo "export IMAGE_PATH=\"${IMAGE_PATH}\"" >> $GITHUB_ENV
