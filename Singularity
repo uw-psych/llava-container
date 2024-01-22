@@ -12,7 +12,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	VERSION 0.0.3
 
 %setup
-	[ -n "${APPTAINER_ROOTFS:-}" ] && ./write-apptainer-labels.sh >"${APPTAINER_ROOTFS}/.build_labels"
+	[ -n "${APPTAINER_ROOTFS:-}" ] && ./.build-scripts/write-apptainer-labels.sh >"${APPTAINER_ROOTFS}/.build_labels"
 
 %files
 	llava-run.py /opt/local/bin/llava-run
