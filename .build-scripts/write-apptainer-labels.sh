@@ -28,16 +28,16 @@ write_apptainer_labels() {
 		[ -z "${IMAGE_URL:-}" ] && [ -n "${IMAGE_VCS_URL:-}" ] && IMAGE_URL="${IMAGE_VCS_URL%%.git}" # Set the default URL to the VCS URL without the .git extension
 		IMAGE_VCS_REF="${IMAGE_VCS_REF:-$(git rev-parse --short HEAD || true)}"                      # Set the default VCS ref to the short hash of HEAD
 
-		IMAGE_GIT_TAG="${GITHUB_REF_NAME:-"$(git tag --points-at HEAD --list '*@*' --list '*:*' --sort=-"creatordate:iso" || true)"}" # Set the default git tag to the most recent tag matching the format *@* sorted by date
+		IMAGE_GIT_TAG="${GITHUB_REF_NAME:-"$(git tag --points-at HEAD --list '*@*' --sort=-"creatordate:iso" || true)"}" # Set the default git tag to the most recent tag matching the format *@* sorted by date
 
 		if [ -n "${IMAGE_GIT_TAG:-}" ]; then
 			if [ -z "${IMAGE_TAG:-}" ]; then
-				IMAGE_TAG="$(echo "${IMAGE_GIT_TAG:-}" | sed -nE 's/.*[:@]//; s/^v//; 1p')"
+				IMAGE_TAG="$(echo "${IMAGE_GIT_TAG:-}" | sed -nE 's/.*[@]//; s/^v//; 1p')"
 				[ -z "${IMAGE_TAG:-}" ] && IMAGE_TAG='latest'
 			fi
 
 			if [ -n "${IMAGE_TITLE:-}" ]; then
-				IMAGE_TITLE="$(echo "${IMAGE_GIT_TAG}" | sed -nE 's/[:@].*$//; 1p')"
+				IMAGE_TITLE="$(echo "${IMAGE_GIT_TAG}" | sed -nE 's/[@].*$//; 1p')"
 			fi
 		fi
 	fi
