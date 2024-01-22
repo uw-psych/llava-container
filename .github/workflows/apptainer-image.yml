@@ -17,7 +17,7 @@ jobs:
           APPTAINER_VERSION="${APPTAINER_VERSION:-1.2.5}"
           curl -o "apptainer-${APPTAINER_VERSION}.deb" -L https://github.com/apptainer/apptainer/releases/download/v${APPTAINER_VERSION}/apptainer_${APPTAINER_VERSION}_amd64.deb
           export DEBIAN_FRONTEND=noninteractive
-          { sudo apt-get update -yq && sudo apt-get upgrade -yq; } || echo "Couldn't update apt packages. Will attempt installation without update & upgrade. >&2
+          { sudo apt-get update -yq && sudo apt-get upgrade -yq; } || echo "Couldn't update apt packages. Will attempt installation without update & upgrade." >&2
            sudo dpkg --install --force-depends "apptainer-${APPTAINER_VERSION}.deb" && sudo apt-get install --fix-broken --yes --quiet
            apptainer >&2 --version && echo >&2 "Apptainer installed successfully!"
       - name: Install ORAS
