@@ -12,7 +12,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	VERSION 0.0.3
 
 %setup
-	[ -n "${APPTAINER_ROOTFS:-}" ] && ./write-apptainer-labels.sh > "${APPTAINER_ROOTFS}/.build_labels"
+	[ -n "${APPTAINER_ROOTFS:-}" ] && ./write-apptainer-labels.sh >"${APPTAINER_ROOTFS}/.build_labels"
 
 %files
 	llava-run.py /opt/local/bin/llava-run
@@ -26,20 +26,20 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 		curl \
 		git
 	apt-get clean -y && rm -rf /var/lib/apt/lists/*
-
+	
 	mkdir -p /opt/setup && cd "$_"
 	curl -fL "{{ DASEL_URL }}" -o /opt/setup/dasel && chmod +x /opt/setup/dasel
 	cd /opt/setup && git clone --branch {{ LLAVA_TAG }} --single-branch --depth 1 {{ LLAVA_REPO }} llava-src && cd llava-src
-
+	
 	# Add setuptools-scm to pyproject.toml
 	/opt/setup/dasel put -f pyproject.toml -t string -v setuptools-scm -s 'build-system.requires.append()'
-
+	
 	micromamba install -y -n base python={{ PYTHON_VERSION }} -c conda-forge pip
 	micromamba run -n base python -m pip install --no-cache-dir --upgrade pip
 	micromamba run -n base python -m pip install --no-cache-dir .
 	micromamba run -n base python -m pip cache purge
 	micromamba clean --all --yes
-
+	
 	rm -rf /opt/setup
 
 %environment
