@@ -9,7 +9,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	DASEL_URL=https://github.com/TomWright/dasel/releases/download/v2.5.0/dasel_linux_amd64
 
 %labels
-	VERSION 0.0.2
+	VERSION 0.0.3
 
 %setup
 	[ -n "${APPTAINER_ROOTFS:-}" ] && ./write-apptainer-labels.sh > "${APPTAINER_ROOTFS}/.build_labels"

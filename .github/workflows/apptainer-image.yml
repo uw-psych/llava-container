@@ -3,7 +3,6 @@ on:
   push:
     tags:
       - "*@*"
-
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
@@ -12,27 +11,28 @@ jobs:
         contents: read
         packages: write
     steps:
-      - name: Set Apptainer download version
-        run: |
-          APPTAINER_VERSION=1.2.5
-          echo "APPTAINER_VERSION=$APPTAINER_VERSION" >> $GITHUB_ENV
-          SETUP_DOWNLOADS_DIR=.setup-downloads
-          echo "SETUP_DOWNLOADS_DIR=$SETUP_DOWNLOADS_DIR" >> $GITHUB_ENV
-          mkdir -p "${SETUP_DOWNLOADS_DIR}"
       - name: Download Apptainer
         run: |
           set -eux
-          [ -r "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" ] || curl -o "${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb" -L https://github.com/apptainer/apptainer/releases/download/v${APPTAINER_VERSION}/apptainer_${APPTAINER_VERSION}_amd64.deb
-      - name: Install Apptainer
+          APPTAINER_VERSION="${APPTAINER_VERSION:-1.2.5}"
+          curl -o "apptainer-${APPTAINER_VERSION}.deb" -L https://github.com/apptainer/apptainer/releases/download/v${APPTAINER_VERSION}/apptainer_${APPTAINER_VERSION}_amd64.deb
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update -yq && sudo apt-get upgrade -yq && sudo dpkg --install --force-depends "apptainer-${APPTAINER_VERSION}.deb" && sudo apt-get install --fix-broken --yes --quiet && sudo apt-get clean && apptainer >&2 --version && echo >&2 "Apptainer installed successfully!"
+      - name: Install ORAS
         run: |
           set -eux
-          sudo apt install -y "./${SETUP_DOWNLOADS_DIR}/apptainer-${APPTAINER_VERSION}.deb"
+          ORAS_VERSION="${ORAS_VERSION:-1.1.0}"          
+          curl -o "oras_${ORAS_VERSION}.tar.gz" -L "https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz"
+
+          # Install the executable:
+          tar -xvf oras_${ORAS_VERSION}.tar.gz && chmod +x oras && sudo mv oras /usr/local/bin/oras
+          sudo mv "${DOWNLOAD_PATH}" /usr/local/bin/oras && sudo chmod +x /usr/local/bin/oras & oras >&2 version && echo >&2 "oras installed successfully!"
       - name: Check out code for the container build
         uses: actions/checkout@v4
       - name: Build Container
         run: |
           set -eux
-          apptainer build --disable-cache --fix-perms --force container.sif Singularity
+          apptainer build --disable-cache --fix-perms --force "$(basename ${PWD})".sif Singularity
           echo "Container built successfully" >&2
           echo "Container size:" >&2
           du -h container.sif >&2
@@ -46,8 +46,11 @@ jobs:
           IMAGE_TAG="${IMAGE_TAG##*@}"
           IMAGE_NAME=${{ github.ref_name }}
           IMAGE_NAME="${IMAGE_NAME%%@*}"
-          DST="oras://ghcr.io/${{ github.repository }}/${IMAGE_NAME}:${IMAGE_TAG}"
-          echo "Pushing to \"${DST}\"" >&2
-          apptainer remote login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} oras://ghcr.io
+          apptainer remote login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} oras://oras://ghcr.io/${{ github.repository }}/${IMAGE_NAME}:${IMAGE_TAG}"
+
           apptainer push -U container.sif "${DST}"
+          if [[ "${IMAGE_TAG}" != "latest" ]]; 
+            oras login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} ghcr.io
+            oras tag ghcr.io/${{ github.repository }}/${IMAGE_NAME}:${IMAGE_TAG} latest
+          fi
           echo "Done" >&2
