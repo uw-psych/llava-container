@@ -24,27 +24,39 @@ write_apptainer_labels() {
 
 	# Try to fill in the build labels via git if not already set and git is available
 	if git tag >/dev/null 2>&1; then
-		IMAGE_VCS_URL="${IMAGE_VCS_URL:-$(git remote get-url origin || true)}"                                            # Set the default VCS URL to the origin remote
-		[ -z "${IMAGE_URL:-}" ] && [ -n "${IMAGE_VCS_URL:-}" ] && IMAGE_URL="${IMAGE_VCS_URL%%.git}"                      # Set the default URL to the VCS URL without the .git extension
-		IMAGE_VCS_REF="${IMAGE_VCS_REF:-$(git rev-parse --short HEAD || true)}"                                           # Set the default VCS ref to the short hash of HEAD
-		IMAGE_TAG="${IMAGE_TAG:-"$(git tag --points-at HEAD --list '*@*' --sort=-"creatordate:iso" | sed 's/.*@//;1q')"}" # Set the default tag to the most recent tag matching the format *@* sorted by date
-		IMAGE_TAG="${IMAGE_TAG:-latest}"                                                                                  # Set the default tag to latest if no tag was found
-		IMAGE_TITLE="${IMAGE_TITLE:-"${PWD##*/}"}"                                                                        # Set the default title to the current directory name
-		IMAGE_VERSION="${IMAGE_VERSION:-${IMAGE_TAG:-}}"                                                                  # Set the default version to the tag if set, otherwise the tag if set, otherwise empty
+		IMAGE_VCS_URL="${IMAGE_VCS_URL:-$(git remote get-url origin || true)}"                       # Set the default VCS URL to the origin remote
+		[ -z "${IMAGE_URL:-}" ] && [ -n "${IMAGE_VCS_URL:-}" ] && IMAGE_URL="${IMAGE_VCS_URL%%.git}" # Set the default URL to the VCS URL without the .git extension
+		IMAGE_VCS_REF="${IMAGE_VCS_REF:-$(git rev-parse --short HEAD || true)}"                      # Set the default VCS ref to the short hash of HEAD
 
-		# If no image vendor is set, try to set it to the GitHub organization:
-		if [ -z "${IMAGE_VENDOR:=${IMAGE_VENDOR:-}}" ]; then
-			# If the GitHub organization is not set, try to set it to the GitHub organization of the upstream remote:
-			[ -z "${GH_ORG:-}" ] && GH_ORG="$(git remote get-url upstream | sed -n 's/.*github.com[:/]\([^/]*\)\/.*/\1/p' || true)"
-			# If the GitHub organization is not set, try to set it to the GitHub organization of the origin remote:
-			[ -z "${GH_ORG:-}" ] && GH_ORG="$(git remote get-url origin | sed -n 's/.*github.com[:/]\([^/]*\)\/.*/\1/p' || true)"
+		IMAGE_GIT_TAG="${GITHUB_REF_NAME:-"$(git tag --points-at HEAD --list '*@*' --list '*:*' --sort=-"creatordate:iso" || true)"}" # Set the default git tag to the most recent tag matching the format *@* sorted by date
 
-			# Assign the image vendor to the GitHub organization or username if it is set, otherwise leave it empty:
-			IMAGE_VENDOR="${GH_ORG:-}"
+		if [ -n "${IMAGE_GIT_TAG:-}" ]; then
+			if [ -z "${IMAGE_TAG:-}" ]; then
+				IMAGE_TAG="$(echo "${IMAGE_GIT_TAG:-}" | sed -nE 's/.*[:@]//; s/^v//; 1p')"
+				[ -z "${IMAGE_TAG:-}" ] && IMAGE_TAG='latest'
+			fi
 
-			# If the GitHub organization is set to uw-psych, set the image vendor to the University of Washington Department of Psychology:
-			[ "${IMAGE_VENDOR:-}" = 'uw-psych' ] && IMAGE_VENDOR='University of Washington Department of Psychology'
+			if [ -n "${IMAGE_TITLE:-}" ]; then
+				IMAGE_TITLE="$(echo "${IMAGE_GIT_TAG}" | sed -nE 's/[:@].*$//; 1p')"
+			fi
 		fi
+	fi
+	IMAGE_TAG="${IMAGE_TAG:-latest}"                     # Set the default tag to latest if no tag was found
+	IMAGE_TITLE="${IMAGE_TITLE:-"$(basename "${PWD}")"}" # Set the default title to the current directory name
+	IMAGE_VERSION="${IMAGE_VERSION:-${IMAGE_TAG:-}}"     # Set the default version to the tag if set, otherwise the tag if set, otherwise empty
+
+	# If no image vendor is set, try to set it to the GitHub organization:
+	if [ -z "${IMAGE_VENDOR:=${IMAGE_VENDOR:-}}" ]; then
+		# If the GitHub organization is not set, try to set it to the GitHub organization of the upstream remote:
+		[ -z "${GH_ORG:-}" ] && GH_ORG="$(git remote get-url upstream | sed -n 's/.*github.com[:/]\([^/]*\)\/.*/\1/p' || true)"
+		# If the GitHub organization is not set, try to set it to the GitHub organization of the origin remote:
+		[ -z "${GH_ORG:-}" ] && GH_ORG="$(git remote get-url origin | sed -n 's/.*github.com[:/]\([^/]*\)\/.*/\1/p' || true)"
+
+		# Assign the image vendor to the GitHub organization or username if it is set, otherwise leave it empty:
+		IMAGE_VENDOR="${GH_ORG:-}"
+
+		# If the GitHub organization is set to uw-psych, set the image vendor to the University of Washington Department of Psychology:
+		[ "${IMAGE_VENDOR:-}" = 'uw-psych' ] && IMAGE_VENDOR='University of Washington Department of Psychology'
 	fi
 
 	# Try to set image author from GITHUB_REPOSITORY_OWNER if not set:
