@@ -4,8 +4,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 %arguments
 	MICROMAMBA_TAG=jammy-cuda-12.3.1
 	PYTHON_VERSION=3.11
-	LLAVA_REPO=https://github.com/haotian-liu/LLaVA
-	LLAVA_TAG=v1.1.3
+	LLAVA_URL=https://codeload.github.com/haotian-liu/LLaVA/tar.gz/refs/heads/main
 	DASEL_URL=https://github.com/TomWright/dasel/releases/download/v2.5.0/dasel_linux_amd64
 
 %labels
@@ -29,8 +28,9 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	
 	mkdir -p /opt/setup && cd "$_"
 	curl -fL "{{ DASEL_URL }}" -o /opt/setup/dasel && chmod +x /opt/setup/dasel
-	cd /opt/setup && git clone --branch {{ LLAVA_TAG }} --single-branch --depth 1 {{ LLAVA_REPO }} llava-src && cd llava-src
-	
+	mkdir -p /opt/setup/llava && cd "$_"
+	curl -fL "{{ LLAVA_URL }}" | tar -xz --strip-components=1
+
 	# Add setuptools-scm to pyproject.toml
 	/opt/setup/dasel put -f pyproject.toml -t string -v setuptools-scm -s 'build-system.requires.append()'
 	
@@ -68,8 +68,10 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	
 	To specify a directory to use for the HuggingFace model cache, use the
 	following command:
-		apptainer run --nv --env HUGGINGFACE_HUB_CACHE=/path/to/cache \
-			llava-container.sif llava-run
+		apptainer run -writable-tmpfs \
+					   --nv
+					   --env HUGGINGFACE_HUB_CACHE=/path/to/cache \
+				  llava-container.sif llava-run
 	
 	This container includes a script called "llava-run" that runs LLaVA with the
 	arguments provided. The following describes the usage of this script:
