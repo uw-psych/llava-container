@@ -32,12 +32,14 @@ jobs:
       - name: Build Container
         run: |
           set -eux
-          apptainer build --disable-cache --fix-perms --force "$(basename ${PWD})".sif Singularity
+          IMAGE_PATH="$(basename ${PWD})".sif
+          apptainer build --disable-cache --fix-perms --force "${IMAGE_PATH}" Singularity
           echo "Container built successfully" >&2
           echo "Container size:" >&2
-          du -h container.sif >&2
+          du -h ""${IMAGE_PATH}" >&2
           echo "Container labels:" >&2
-          apptainer inspect container.sif >&2
+          apptainer inspect "${IMAGE_PATH}" >&2
+          echo "export IMAGE_PATH=\"${IMAGE_PATH}\"" >> $GITHUB_ENV
       - name: Push Container
         run: |
           set -eux
@@ -46,9 +48,8 @@ jobs:
           IMAGE_TAG="${IMAGE_TAG##*@}"
           IMAGE_NAME=${{ github.ref_name }}
           IMAGE_NAME="${IMAGE_NAME%%@*}"
-          apptainer remote login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} oras://oras://ghcr.io/${{ github.repository }}/${IMAGE_NAME}:${IMAGE_TAG}"
-
-          apptainer push -U container.sif "${DST}"
+          apptainer remote login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} 
+          apptainer push -U "${IMAGE_PATH}" "${DST}" oras://ghcr.io/${{ github.repository }}/${IMAGE_NAME}:${IMAGE_TAG}"
           if [[ "${IMAGE_TAG}" != "latest" ]]; 
             oras login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} ghcr.io
             oras tag ghcr.io/${{ github.repository }}/${IMAGE_NAME}:${IMAGE_TAG} latest
