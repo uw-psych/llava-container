@@ -36,9 +36,10 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	echo 'llava = ["*.jpg"]' >> pyproject.toml
 
 	# Install LLaVA and dependencies:
+	export CUDA_HOME=/usr/local/cuda
 	micromamba run -n base python -m pip install --verbose --no-cache-dir .
-	micromamba run -n base python -m pip install --verbose --no-cache-dir -e ".[train]"
-	micromamba run -n base python -m pip install --verbose --no-cache-dir --no-build-isolation flash-attn
+	micromamba run -e CUDA_HOME="${CUDA_HOME}" -n base python -m pip install --verbose --no-cache-dir -e ".[train]"
+	micromamba run CUDA_HOME="${CUDA_HOME}" -n base python -m pip install --verbose --no-cache-dir --no-build-isolation flash-attn
 
 	# Clean up:
 	micromamba run -n base python -m pip cache purge
@@ -47,8 +48,9 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 
 %environment
 	export MAMBA_DOCKERFILE_ACTIVATE=1
-	export PATH="/opt/local/bin:$PATH"
+	export PATH="/opt/local/bin:${PATH}"
 	export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-}"
+	export CUDA_HOME="${CUDA_HOME:-/usr/local/cuda}"
 
 %runscript
 	# Run the provided command with the micromamba base environment activated:
