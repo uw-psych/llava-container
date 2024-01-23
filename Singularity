@@ -36,7 +36,6 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	echo 'llava = ["*.jpg"]' >> pyproject.toml
 
 	# Install LLaVA and dependencies:
-	export TORCH_CUDA_ARCH_LIST="{{ TORCH_CUDA_ARCH_LIST }}"
 	micromamba run -n base python -m pip install --verbose --no-cache-dir .
 
 	# Clean up:
