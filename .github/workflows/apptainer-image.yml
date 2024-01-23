@@ -41,7 +41,7 @@ jobs:
           du -h "${IMAGE_PATH}" >&2
           echo "Container labels:" >&2
           apptainer inspect "${IMAGE_PATH}" >&2
-          echo "export IMAGE_PATH=\"${IMAGE_PATH}\"" >> $GITHUB_ENV
+          echo "IMAGE_PATH=${IMAGE_PATH}" >> $GITHUB_ENV
       - name: Push Container
         run: |
           set -eux
