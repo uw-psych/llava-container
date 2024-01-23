@@ -46,8 +46,6 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 %environment
 	export MAMBA_DOCKERFILE_ACTIVATE=1
 	export PATH="/opt/local/bin:${PATH}"
-	export HUGGINGFACE_HUB_CACHE="${HUGGINGFACE_HUB_CACHE:-}"
-	export CUDA_HOME="${CUDA_HOME:-/usr/local/cuda}"
 
 %runscript
 	# Run the provided command with the micromamba base environment activated:
