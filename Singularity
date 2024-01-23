@@ -40,7 +40,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	export TORCH_CUDA_ARCH_LIST="{{ TORCH_CUDA_ARCH_LIST }}"
 	micromamba run -n base python -m pip install --verbose --no-cache-dir .
 	micromamba run -e TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}" -n base python -m pip install --verbose --no-cache-dir -e ".[train]"
-	micromamba run TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}" -n base python -m pip install --verbose --no-cache-dir --no-build-isolation flash-attn
+	micromamba run -e TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}" -n base python -m pip install --verbose --no-cache-dir --no-build-isolation flash-attn
 
 	# Clean up:
 	micromamba run -n base python -m pip cache purge
