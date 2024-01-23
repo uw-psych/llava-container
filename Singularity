@@ -5,7 +5,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	MICROMAMBA_TAG=jammy-cuda-12.3.1
 	PYTHON_VERSION=3.11
 	LLAVA_URL=https://codeload.github.com/haotian-liu/LLaVA/tar.gz/refs/heads/main
-	
+
 %labels
 	VERSION 0.0.3
 
@@ -20,7 +20,6 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	export MAMBA_DOCKERFILE_ACTIVATE=1
 	export DEBIAN_FRONTEND=noninteractive
 	
-	
 	# Set up the micromamba base environment, using requests to download LLaVA:
 	micromamba install -y -n base -c conda-forge python={{ PYTHON_VERSION }} pip requests
 	micromamba run -n base python -m pip install --upgrade pip
@@ -28,16 +27,15 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	# Download and install LLaVA:
 	mkdir -p /opt/setup/llava && cd /opt/setup/llava
 	micromamba run -n base python -c \
-		'import requests;open("llava.tar.gz", "wb").write(requests.get("{{ LLAVA_URL }}",allow_redirects=True).content)' \
-		&& tar -xzf llava.tar.gz --strip-components=1
+		'import requests;open("llava.tar.gz", "wb").write(requests.get("{{ LLAVA_URL }}",allow_redirects=True).content)' &&
+		tar -xzf llava.tar.gz --strip-components=1
 	
 	# Update pyproject.toml to include the package data in examples (web server breaks without):
-	echo '[tool.setuptools.package-data]' >> pyproject.toml
-	echo 'llava = ["*.jpg"]' >> pyproject.toml
+	printf '[tool.setuptools.package-data]\nllava = ["serve/examples/*.jpg"]' >> pyproject.toml
 
 	# Install LLaVA and dependencies:
-	micromamba run -n base python -m pip install --verbose --no-cache-dir .
-
+	micromamba run -n base python -m pip install --no-cache-dir --config-settings="--install-data=$PWD/llava" .
+	
 	# Clean up:
 	micromamba run -n base python -m pip cache purge
 	micromamba clean --all --yes
