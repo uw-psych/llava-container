@@ -19,13 +19,28 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	set -ex
 	export MAMBA_DOCKERFILE_ACTIVATE=1
 	export DEBIAN_FRONTEND=noninteractive
-	micromamba install -y -n base -c conda-forge python={{ PYTHON_VERSION }} pip requests	
-	mkdir -p /opt/setup/llava && cd "$_"
-	micromamba run -n base python -c 'import requests;open("llava.tar.gz", "wb").write(requests.get("{{ LLAVA_URL }}",allow_redirects=True).content)' && tar -xzf llava.tar.gz --strip-components=1
+	
+	
+	# Set up the micromamba base environment, using requests to download LLaVA:
+	micromamba install -y -n base -c conda-forge python={{ PYTHON_VERSION }} pip requests
 	micromamba run -n base python -m pip install --upgrade pip
+	
+	# Download and install LLaVA:
+	mkdir -p /opt/setup/llava && cd "$_"
+	micromamba run -n base python -c \
+		'import requests;open("llava.tar.gz", "wb").write(requests.get("{{ LLAVA_URL }}",allow_redirects=True).content)' \
+		&& tar -xzf llava.tar.gz --strip-components=1
+	
+	# Update pyproject.toml to include the package data in examples (web server breaks without):
 	echo '[tool.setuptools.package-data]' >> pyproject.toml
 	echo 'llava = ["*.jpg"]' >> pyproject.toml
+
+	# Install LLaVA and dependencies:
 	micromamba run -n base python -m pip install --verbose --no-cache-dir .
+	micromamba run -n base python -m pip install --verbose --no-cache-dir -e ".[train]"
+	micromamba run -n base python -m pip install --verbose --no-cache-dir --no-build-isolation flash-attn
+
+	# Clean up:
 	micromamba run -n base python -m pip cache purge
 	micromamba clean --all --yes
 	rm -rf /opt/setup
