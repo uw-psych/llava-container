@@ -5,8 +5,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	MICROMAMBA_TAG=jammy-cuda-12.3.1
 	PYTHON_VERSION=3.11
 	LLAVA_URL=https://codeload.github.com/haotian-liu/LLaVA/tar.gz/refs/heads/main
-	DASEL_URL=https://github.com/TomWright/dasel/releases/download/v2.5.0/dasel_linux_amd64
-
+	
 %labels
 	VERSION 0.0.3
 
@@ -20,26 +19,15 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	set -ex
 	export MAMBA_DOCKERFILE_ACTIVATE=1
 	export DEBIAN_FRONTEND=noninteractive
-	apt-get update -y && apt-get install -y --no-install-recommends \
-		ca-certificates \
-		curl \
-		git
-	apt-get clean -y && rm -rf /var/lib/apt/lists/*
-	
-	mkdir -p /opt/setup && cd "$_"
-	curl -fL "{{ DASEL_URL }}" -o /opt/setup/dasel && chmod +x /opt/setup/dasel
+	micromamba install -y -n base -c conda-forge python={{ PYTHON_VERSION }} pip requests	
 	mkdir -p /opt/setup/llava && cd "$_"
-	curl -fL "{{ LLAVA_URL }}" | tar -xz --strip-components=1
-
-	# Add setuptools-scm to pyproject.toml
-	/opt/setup/dasel put -f pyproject.toml -t string -v setuptools-scm -s 'build-system.requires.append()'
-	
-	micromamba install -y -n base python={{ PYTHON_VERSION }} -c conda-forge pip
-	micromamba run -n base python -m pip install --no-cache-dir --upgrade pip
-	micromamba run -n base python -m pip install --no-cache-dir .
+	micromamba run -n base python -c 'import requests;open("llava.tar.gz", "wb").write(requests.get("{{ LLAVA_URL }}",allow_redirects=True).content)' && tar -xzf llava.tar.gz --strip-components=1
+	micromamba run -n base python -m pip install --upgrade pip
+	echo '[tool.setuptools.package-data]' >> pyproject.toml
+	echo 'llava = ["*.jpg"]' >> pyproject.toml
+	micromamba run -n base python -m pip install --verbose --no-cache-dir .
 	micromamba run -n base python -m pip cache purge
 	micromamba clean --all --yes
-	
 	rm -rf /opt/setup
 
 %environment
@@ -51,6 +39,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	# Run the provided command with the micromamba base environment activated:
 	eval "$(micromamba shell hook --shell posix)"
 	micromamba activate
+	echo "Using HUGGINGFACE_HUB_CACHE=\"${HUGGINGFACE_HUB_CACHE:-}\"" >&2
 	exec "$@"
 
 %help

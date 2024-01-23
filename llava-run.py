@@ -54,9 +54,6 @@ def load_images(image_files):
 
 
 def eval_model(args):
-    if args.hf_cache_dir:
-        os.environ["HUGGINGFACE_HUB_CACHE"] = args.hf_cache_dir
-
     # Model
     disable_torch_init()
 
@@ -158,7 +155,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("--model-base", type=str, default=None, help="Model base")
     parser.add_argument("--image-file", type=str, required=True, help="Image file")
-    parser.add_argument("--query", type=str, required=True, help="Query")
+    parser.add_argument("--query", type=str, required=False, help="Query")
+    parser.add_argument("--chat", action="store_true", help="Use chat instead of query")
     parser.add_argument("--conv-mode", type=str, default=None, help="Conversation mode")
     parser.add_argument(
         "--sep", type=str, default=",", help="Separator for image files"
@@ -177,5 +175,19 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    if args.hf_cache_dir:
+        os.environ["HUGGINGFACE_HUB_CACHE"] = args.hf_cache_dir
+    if not (args.chat or args.query):
+        raise ValueError("Either --chat or --query must be specified")
 
-    eval_model(args)
+    if args.chat:
+        import llava.serve.cli as cli
+
+        del args.chat
+        del args.query
+        del args.top_p
+        del args.num_beams
+        del args.hf_cache_dir
+        cli.main(args)
+    else:
+        eval_model(args)
