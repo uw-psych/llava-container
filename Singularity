@@ -26,7 +26,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	micromamba run -n base python -m pip install --upgrade pip
 	
 	# Download and install LLaVA:
-	mkdir -p /opt/setup/llava && cd "$_"
+	mkdir -p /opt/setup/llava && cd /opt/setup/llava
 	micromamba run -n base python -c \
 		'import requests;open("llava.tar.gz", "wb").write(requests.get("{{ LLAVA_URL }}",allow_redirects=True).content)' \
 		&& tar -xzf llava.tar.gz --strip-components=1
