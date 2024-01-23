@@ -5,6 +5,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	MICROMAMBA_TAG=jammy-cuda-12.3.1
 	PYTHON_VERSION=3.11
 	LLAVA_URL=https://codeload.github.com/haotian-liu/LLaVA/tar.gz/refs/heads/main
+	TORCH_CUDA_ARCH_LIST=sm_86 sm_89
 	
 %labels
 	VERSION 0.0.3
@@ -36,10 +37,10 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	echo 'llava = ["*.jpg"]' >> pyproject.toml
 
 	# Install LLaVA and dependencies:
-	export CUDA_HOME=/usr/local/cuda
+	export TORCH_CUDA_ARCH_LIST="{{ TORCH_CUDA_ARCH_LIST }}"
 	micromamba run -n base python -m pip install --verbose --no-cache-dir .
-	micromamba run -e CUDA_HOME="${CUDA_HOME}" -n base python -m pip install --verbose --no-cache-dir -e ".[train]"
-	micromamba run CUDA_HOME="${CUDA_HOME}" -n base python -m pip install --verbose --no-cache-dir --no-build-isolation flash-attn
+	micromamba run -e TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}" -n base python -m pip install --verbose --no-cache-dir -e ".[train]"
+	micromamba run TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}" -n base python -m pip install --verbose --no-cache-dir --no-build-isolation flash-attn
 
 	# Clean up:
 	micromamba run -n base python -m pip cache purge
