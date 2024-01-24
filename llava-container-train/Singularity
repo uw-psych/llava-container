@@ -9,7 +9,7 @@ From: {{NV_BASE_IMAGE}}
 	CUDA_ARCHITECTURES=sm_86 sm_89
 
 %labels
-	VERSION 0.0.3
+	VERSION 0.0.4
 
 %setup
 	[ -n "${APPTAINER_ROOTFS:-}" ] && ../.build-scripts/write-apptainer-labels.sh >"${APPTAINER_ROOTFS}/.build_labels"

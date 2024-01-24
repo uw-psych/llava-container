@@ -7,7 +7,7 @@ From: mambaorg/micromamba:{{ MICROMAMBA_TAG }}
 	LLAVA_URL=https://codeload.github.com/haotian-liu/LLaVA/tar.gz/refs/heads/main
 
 %labels
-	VERSION 0.0.3
+	VERSION 0.0.4
 
 %setup
 	[ -n "${APPTAINER_ROOTFS:-}" ] && ../.build-scripts/write-apptainer-labels.sh >"${APPTAINER_ROOTFS}/.build_labels"

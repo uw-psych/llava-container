@@ -4,6 +4,7 @@
 
 import argparse
 import torch
+import json
 
 from llava.constants import (
     IMAGE_TOKEN_INDEX,
@@ -53,7 +54,7 @@ def load_images(image_files):
     return out
 
 
-def eval_model(args):
+def eval_model_single(tokenizer, model, image_processor, context_len, query, args):
     # Model
     disable_torch_init()
 
@@ -67,7 +68,7 @@ def eval_model(args):
         device=args.device,
     )
 
-    qs = args.query
+    qs = query
     image_token_se = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN
     if IMAGE_PLACEHOLDER in qs:
         if model.config.mm_use_im_start_end:
@@ -145,34 +146,155 @@ def eval_model(args):
     if outputs.endswith(stop_str):
         outputs = outputs[: -len(stop_str)]
     outputs = outputs.strip()
-    print(outputs)
+    return outputs
+
+
+def eval_model_multiple(args):
+    disable_torch_init()
+
+    model_name = get_model_name_from_path(args.model_path)
+    tokenizer, model, image_processor, context_len = load_pretrained_model(
+        args.model_path,
+        args.model_base,
+        model_name,
+        args.load_8bit,
+        args.load_4bit,
+        device=args.device,
+    )
+
+    if len(args.image_file) > 1 or len(args.query) > 1:
+        args.json = True
+
+    for i in args.image_file:
+        for q in args.query:
+            outputs = eval_model_single(
+                tokenizer, model, image_processor, context_len, args
+            )
+            if args.json:
+                print(json.dumps({"image": i, "query": q, "output": outputs}))
+            else:
+                print(outputs)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--model-path", type=str, default="facebook/opt-350m", help="Model path"
+        "--model-path",
+        type=str,
+        metavar="PATH",
+        default="liuhaotian/llava-v1.5-7b",
+        help="Model path",
     )
-    parser.add_argument("--model-base", type=str, default=None, help="Model base")
-    parser.add_argument("--image-file", type=str, required=True, help="Image file")
-    parser.add_argument("--query", type=str, required=False, help="Query")
-    parser.add_argument("--chat", action="store_true", help="Use chat instead of query")
-    parser.add_argument("--conv-mode", type=str, default=None, help="Conversation mode")
     parser.add_argument(
-        "--sep", type=str, default=",", help="Separator for image files"
+        "--model-base",
+        type=str,
+        metavar="PATH",
+        default=None,
+        help="Model base (required for 'lora' models)",
     )
-    parser.add_argument("--temperature", type=float, default=0.2, help="Temperature")
-    parser.add_argument("--top_p", type=float, default=None, help="Top p")
-    parser.add_argument("--num_beams", type=int, default=1, help="Number of beams")
+
     parser.add_argument(
-        "--max_new_tokens", type=int, default=512, help="Max new tokens"
+        "--image",
+        metavar="IMAGE",
+        type=str,
+        dest="image_file",
+        required=True,
+        action="store",
+        nargs="+",
+        help="Path or URL to image (provide multiple to process in batch; use --sep delimiter within paths to stack image inputs )",
     )
-    parser.add_argument("--load-8bit", action="store_true", help="Load 8bit model")
-    parser.add_argument("--load-4bit", action="store_true", help="Load 4bit model")
-    parser.add_argument("--device", type=str, default="cuda", help="cuda or cpu")
+
+    query_mode_group = parser.add_mutually_exclusive_group(required=True)
+    query_mode_group.add_argument(
+        "--query",
+        type=str,
+        metavar="QUERY",
+        action="store",
+        nargs="+",
+        help="Query (can be specified multiple times, e.g. --query a --query b)",
+    )
+    query_mode_group.add_argument(
+        "--chat", action="store_true", help="Use chat instead of query"
+    )
+
+    parser.add_argument("--json", action="store_true", help="Produce JSON output")
+
     parser.add_argument(
-        "--hf-cache-dir", type=str, default=None, help="HuggingFace cache directory"
+        "--conv-mode",
+        type=str,
+        default="v0",
+        help="Conversation mode (default: v0)",
+        choices=[
+            "v0",
+            "v1",
+            "vicuna_v1",
+            "llama_2",
+            "plain",
+            "v0_plain",
+            "llava_v0",
+            "v0_mmtag",
+            "llava_v1",
+            "v1_mmtag",
+            "llava_llama_2",
+            "mpt",
+        ],
     )
+    parser.add_argument(
+        "--stack-sep",
+        type=str,
+        default=",",
+        dest="sep",
+        help='Internal separator for stacked image files (default: ",")',
+    )
+    parser.add_argument(
+        "--temperature",
+        metavar="FLOAT",
+        type=float,
+        default=0.2,
+        help="Temperature (default: 0.2)",
+    )
+    parser.add_argument(
+        "--top_p", metavar="FLOAT", type=float, default=0.9, help="Top p (default: 0.9)"
+    )
+    parser.add_argument(
+        "--num_beams",
+        metavar="N",
+        type=int,
+        default=1,
+        help="Number of beams (default: 1)",
+    )
+    parser.add_argument(
+        "--max_new_tokens",
+        type=int,
+        metavar="N",
+        default=512,
+        help="Max new tokens (default: 512)",
+    )
+
+    bit_group = parser.add_mutually_exclusive_group()
+    bit_group.add_argument("--load-8bit", action="store_true", help="Load 8bit model")
+    bit_group.add_argument("--load-4bit", action="store_true", help="Load 4bit model")
+    parser.add_argument(
+        "--device",
+        type=str,
+        default=None,
+        choices=["cuda", "cpu"],
+        help="Device to use",
+    )
+    parser.add_argument(
+        "--hf-cache-dir",
+        metavar="DIR",
+        type=str,
+        default=None,
+        help="HuggingFace cache directory",
+    )
+
+    args = parser.parse_args()
+    print(repr(args))
+    if args.chat and len(args.image) > 1:
+        raise ValueError("Batch processing of multiple images not allowed in chat mode")
+    if args.chat and args.json:
+        raise ValueError("JSON output not available in chat mode")
 
     args = parser.parse_args()
     if args.hf_cache_dir:
@@ -180,15 +302,37 @@ if __name__ == "__main__":
     if not (args.chat or args.query):
         raise ValueError("Either --chat or --query must be specified")
 
+    if torch.cuda.is_available():
+        args.device = "cuda"
+    else:
+        if args.device == "cuda":
+            raise ValueError(
+                "--device cuda is specified, but no CUDA available. Try --device cpu."
+            )
+        args.device = "cpu"
+
     if args.chat:
         import llava.serve.cli as cli
 
-        del args.chat
-        del args.query
-        del args.top_p
-        del args.num_beams
-        del args.hf_cache_dir
-        args.debug = False
-        cli.main(args)
+        cli_args_keys = [
+            "model_path",
+            "model_base",
+            "image_file",
+            "device",
+            "conv_mode",
+            "temperature",
+            "max_new_tokens",
+            "load_8bit",
+            "load_4bit",
+            "debug",
+            "image_aspect_ratio",
+        ]
+        cli_args_dict = {k: v for k, v in args.__dict__.items() if k in cli_args_keys}
+        cli_args_dict["image_file"] = args.image_file[0]
+        cli_args_dict["query"] = args.query[0]
+        cli_args_dict.setdefault("device", "cuda")
+        cli_args_dict.setdefault("temperature", 0.2)
+        cli_args_dict.setdefault("image_aspect_ratio", "pad")
+        cli.main(argparse.Namespace(**cli_args_dict))
     else:
-        eval_model(args)
+        eval_model_multiple(args)
