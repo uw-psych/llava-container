@@ -188,6 +188,7 @@ if __name__ == "__main__":
         del args.top_p
         del args.num_beams
         del args.hf_cache_dir
+        args.debug = False
         cli.main(args)
     else:
         eval_model(args)
