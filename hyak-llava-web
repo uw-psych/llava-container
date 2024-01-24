@@ -45,7 +45,7 @@ for model_path in "${_model_paths[@]}"; do
 done
 
 printf "To access the gradio web server, run the following command on your local machine:\n"
-printf 'ssh -o StrictHostKeyChecking=no -N -L %d:localhost:%d -J %s@klone.hyak.uw.edu %s@%s\n' "${LOCAL_HTTP_PORT}" "${GRADIO_CONTROLLER_PORT}" "${USER}" "${USER}" "${HOST}" 
+printf 'ssh -o StrictHostKeyChecking=no -N -L %d:localhost:%d -J %s@klone.hyak.uw.edu %s@%s\n' "${LOCAL_HTTP_PORT}" "${GRADIO_CONTROLLER_PORT}" "${USER}" "${USER}" "$(uname -n)"
 
 # Keep the container running:
 while true; do
