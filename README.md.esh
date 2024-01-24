@@ -17,7 +17,7 @@ Then, you'll need to request a compute node. You can do this with the `salloc` c
 # (Note: you may need to change the account and partition)
 salloc --account escience --partition gpu-a40 --mem 64G -c 8 --time 1:00:00 --gpus 2
 ```
-<%= $logs_dir/access.log %>
+
 One you're logged in to the compute node, you should set up your cache directories and Apptainer settings. 
 
 If you're following this tutorial, **you should do this every time you're running LLaVA on Hyak!** This is because the default settings for Apptainer will use your home directory for caching, which will quickly fill up your home directory and cause your jobs to fail. We also set up some additional parameters to Apptainer to enable GPU support and make directories on Hyak accessible to the container.
