@@ -1,0 +1,36 @@
+name: Apptainer Build
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - README.md.esh
+      - .github/workflows/scripts/esh
+      - .github/workflows/build-documentation.yml
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    name: Build documentation
+    permissions: write-all
+    steps:
+      - name: Check out code for the container build
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build documentation and installer in one step
+        id: update-docs-and-installer
+        run: |
+          commit_msg=""
+          ${GITHUB_WORKSPACE}/.github/workflows/scripts/esh README.md.esh > "${GITHUB_WORKSPACE}/README.md"            
+          git config --local user.email "${{ github.event.sender.id }}+${{ github.event.sender.login }}@users.noreply.github.com"
+          git config --local user.name ${{ github.event.sender.login }}
+
+          if ! git diff --quiet --stat README.md; then
+              git add README.md && commit_msg="Template README.md.esh for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\""
+          fi
+          [ -n "${commit_msg:-}" ] && git commit -am "${commit_msg}" && git push
