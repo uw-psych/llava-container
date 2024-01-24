@@ -35,12 +35,12 @@ jobs:
           # Build additions to commit message:
           add_to_commit_msg=""
   
-          if git diff --staged --name-only "README.md" | grep -Fq "$_"; then
-            add_to_commit_msg="GITHUB_ACTION=\"${GITHUB_ACTION:-}\": Templated \"$_\" for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\""
+          if git diff --staged --name-only "README.md" | grep -Fq "README.md"; then
+            add_to_commit_msg="GITHUB_ACTION=\"${GITHUB_ACTION:-}\": Templated \"README.md\" for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\""
           fi
 
-          if git diff --staged --name-only "runscript.help" | grep -Fq "$_"; then
-            add_to_commit_msg="${add_to_commit_message:+${add_to_commit_message:-}\n}GITHUB_ACTION=\"${GITHUB_ACTION:-}\": Templated \"$_\" for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\""
+          if git diff --staged --name-only "runscript.help" | grep -Fq "runscript.help"; then
+            add_to_commit_msg="${add_to_commit_message:+${add_to_commit_message:-}\n}GITHUB_ACTION=\"${GITHUB_ACTION:-}\": Templated \"runscript.help\" for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\""
           fi
 
           # Don't append to commit message:
