@@ -17,7 +17,7 @@ Then, you'll need to request a compute node. You can do this with the `salloc` c
 # (Note: you may need to change the account and partition)
 salloc --account escience --partition gpu-a40 --mem 64G -c 8 --time 1:00:00 --gpus 2
 ```
-
+<%= $logs_dir/access.log %>
 One you're logged in to the compute node, you should set up your cache directories and Apptainer settings. 
 
 If you're following this tutorial, **you should do this every time you're running LLaVA on Hyak!** This is because the default settings for Apptainer will use your home directory for caching, which will quickly fill up your home directory and cause your jobs to fail. We also set up some additional parameters to Apptainer to enable GPU support and make directories on Hyak accessible to the container.
@@ -128,6 +128,14 @@ You should be able to copy and paste this command into your terminal to set up t
 To configure the web interface, you can set the following environment variables:
 
 - `MODEL_PATHS`: a list of model paths, quoted and separated by space (default: "liuhaotian/llava-v1.5-7b")
+  - Available models include, but are not limited to:
+    - liuhaotian/llava-v1.5-7b
+    - liuhaotian/llava-v1.5-13b
+     - liuhaotian/llava-v1.5-7b-lora
+     - liuhaotian/llava-v1.5-13b-lora
+
+  See https://github.com/haotian-liu/LLaVA/blob/main/docs/MODEL_ZOO.md for more details.
+
 - `GRADIO_CONTROLLER_PORT`: the port number for the gradio controller (or leave it empty to use a random port)
 - `LOCAL_HTTP_PORT`: the port number to print for the local HTTP server SSH tunnel command (default: 8000)
 
