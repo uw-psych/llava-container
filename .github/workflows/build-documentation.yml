@@ -7,6 +7,7 @@ on:
       - README.md.esh
       - .github/workflows/scripts/esh
       - .github/workflows/build-documentation.yml
+      - runscript.help.esh
 
 jobs:
   build-and-push-image:
@@ -19,11 +20,41 @@ jobs:
         with:
           fetch-depth: 0
       - name: Build documentation and installer in one step
+        shell: bash
         run: |
-          set -x
-          commit_msg=""
-          ${GITHUB_WORKSPACE}/.github/workflows/scripts/esh  ${GITHUB_WORKSPACE}/README.md.esh > "${GITHUB_WORKSPACE}/README.md"            
-          git config --local user.email "${{ github.event.sender.id }}+${{ github.event.sender.login }}@users.noreply.github.com"
-          git config --local user.name ${{ github.event.sender.login }}
-          git add README.md && commit_msg="Template README.md.esh for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\""
-          [ -n "${commit_msg:-}" ] && git commit -am "${commit_msg}" && git push
+          set -eux -o pipefail
+          
+          # Run esh to fill in the variables:
+          "${GITHUB_WORKSPACE}/.github/workflows/scripts/esh" "${GITHUB_WORKSPACE}/runscript.help.esh" > "${GITHUB_WORKSPACE}/runscript.help"
+          "${GITHUB_WORKSPACE}/.github/workflows/scripts/esh" "${GITHUB_WORKSPACE}/README.md.esh" > "${GITHUB_WORKSPACE}/README.md"
+  
+          # Stage files:
+          git add README.md runscript.help
+          
+  
+          # Build additions to commit message:
+          add_to_commit_msg=""
+  
+          if git diff --staged --name-only "README.md" | grep -Fq "$_"; then
+            add_to_commit_msg="GITHUB_ACTION=\"${GITHUB_ACTION:-}\": Templated \"$_\" for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\""
+          fi
+
+          if git diff --staged --name-only "runscript.help" | grep -Fq "$_"; then
+            add_to_commit_msg="${add_to_commit_message:+${add_to_commit_message:-}\n}GITHUB_ACTION=\"${GITHUB_ACTION:-}\": Templated \"$_\" for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\""
+          fi
+
+          # Don't append to commit message:
+          if [[ -n "${add_to_commit_msg:-}" ]]; then
+            if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]] && [[ "${GITHUB_REF}" =~ ^.*@.*$ ]]; then
+              echo "Not appending commit messages because this is a tagged release" >&2
+              echo -e "Would have added:\n\"${add_to_commit_msg:-}\""
+          else
+            # Get the last commit message, if any:
+            last_commit_msg="$(git log -1 --pretty=format:%B || true)"
+            commit_msg="${last_commit_msg:+${last_commit_msg}\n}${add_to_commit_msg}"
+           
+            # Set up git config for push:
+            git config --local user.email "${{ github.event.sender.id }}+${{ github.event.sender.login }}@users.noreply.github.com"
+            git config --local user.name ${{ github.event.sender.login }}
+            git commit -am "${commit_msg}" && git push --force
+          fi

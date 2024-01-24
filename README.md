@@ -2,7 +2,7 @@
 
 This container provides a convenient way to run [LLaVA](https://github.com/haotian-liu/LLaVA) on Hyak.
 
-## Running LLaVA on Hyak
+## Running LLaVA on Hyak 🍇
 
 First, you'll need to log in to Hyak. If you've never set this up, go [here](https://uw-psych.github.io/compute_docs).
 
@@ -18,9 +18,9 @@ Then, you'll need to request a compute node. You can do this with the `salloc` c
 salloc --account escience --partition gpu-a40 --mem 64G -c 8 --time 1:00:00 --gpus 2
 ```
 
-One you're logged in to the compute node, you should set up your cache directories and Apptainer settings. 
+One you're logged in to the compute node, you should set up your cache directories and Apptainer settings.
 
-If you're following this tutorial, **you should do this every time you're running LLaVA on Hyak!** This is because the default settings for Apptainer will use your home directory for caching, which will quickly fill up your home directory and cause your jobs to fail. We also set up some additional parameters to Apptainer to enable GPU support and make directories on Hyak accessible to the container.
+👉 *If you're following this tutorial, **you should do this every time you're running LLaVA on Hyak!** This is because the default settings for Apptainer will use your home directory for caching, which will quickly fill up your home directory and cause your jobs to fail.*
 
 ```bash
 # Do this in every session where you're running LLaVA on Hyak!
@@ -42,7 +42,7 @@ Then, you can run LLaVA. Let's try with the sample image on LLaVA's repository:
 ```bash
 # Run LLaVA:
 apptainer run \
-    oras://ghcr.io/uw-psych/llava-container/llava-container:latest \
+    oras://ghcr.io/maouw/llava-container/llava-container:latest \
     llava-run \
     --model-path liuhaotian/llava-v1.5-7b \
     --image-file "https://llava-vl.github.io/static/images/view.jpg" \
@@ -63,30 +63,30 @@ If it's working, you should see output that looks something like this:
 
 When you're done, you can exit the compute node with the command `exit` or `Ctrl-D`.
 
-### Chat mode
+### Chat mode 🗣️
 
 For chat, just pass `--chat` instead of `--query`:
 
 ```bash
 apptainer run \
-    oras://ghcr.io/uw-psych/llava-container/llava-container:latest \
+    oras://ghcr.io/maouw/llava-container/llava-container:latest \
     llava-run \
     --model-path liuhaotian/llava-v1.5-7b \
     --image-file "https://llava-vl.github.io/static/images/view.jpg" \
-    --query "What's going on here?"
+    --chat
 ```
 
-### Running other commands
+### Running other commands 🏃
 
 If you want to a different command, such as one of the commands that comes with LLaVA, you can pass it after the image name:
 
 ```bash
 apptainer run \
-    oras://ghcr.io/uw-psych/llava-container/llava-container:latest \
+    oras://ghcr.io/maouw/llava-container/llava-container:latest \
     python -m llava.serve.cli
 ```
 
-### Improving startup time
+### Improving startup time 🚀
 
 If you notice slowness when launching the container, you can try extracting the container image to a sandbox directory:
 
@@ -95,7 +95,7 @@ If you notice slowness when launching the container, you can try extracting the 
 SANDBOX="/tmp/${USER}/sandbox/llava" && mkdir -p "$(dirname "${SANDBOX}")"
 
 # Extract the container image to the sandbox:
-apptainer build --sandbox "${SANDBOX}"  oras://ghcr.io/uw-psych/llava-container/llava-container:latest
+apptainer build --sandbox "${SANDBOX}"  oras://ghcr.io/maouw/llava-container/llava-container:latest
 
 # Run LLaVA by passing the sandbox directory instead of the image URL:
 apptainer run \
@@ -106,13 +106,13 @@ apptainer run \
     --query "What's going on here?"
 ```
 
-### Running the web interface
+### Running the web interface 🕸️
 
 Included in the container is a wrapper script for the LLaVA web interface. To run it, you can use the following command:
 
 ```bash
 apptainer run \
-    oras://ghcr.io/uw-psych/llava-container/llava-container:latest \
+    oras://ghcr.io/maouw/llava-container/llava-container:latest \
     hyak-llava-web
 ```
 
@@ -145,44 +145,50 @@ For example:
 export MODEL_PATHS='liuhaotian/llava-v1.5-13b' # Use the 13b model instead of the 7b model
 export LOCAL_HTTP_PORT=9000 # Use port 9000 instead of 8000
 apptainer run \
-    oras://ghcr.io/uw-psych/llava-container/llava-container:latest \
+    oras://ghcr.io/maouw/llava-container/llava-container:latest \
     hyak-llava-web
 ```
 
+👉 *You need to select the model from the dropdown to start. If the model doesn't appear in the dropdown, wait a few seconds and refresh the page.*
+
 ## `llava-run`
 
-The `llava-run.py` script is a modification of `LLaVA/lava/eval/run_llava.py` that adds support for loading 4- and 8-bit models as found in `LaVA/llava/serve/cli.py`, as well as a chat mode that allows you to have a conversation with the model.
+The `llava-run.py` script is a modification of [`LLaVA/lava/eval/run_llava.py`](https://github.com/haotian-liu/LLaVA/blob/main/llava/eval/run_llava.py) that adds support for loading 4- and 8-bit models as found in [`LaVA/llava/serve/cli.py`](https://github.com/haotian-liu/LLaVA/blob/main/llava/serve/cli.py), as well as a chat mode that allows you to have a conversation with the model.
 
 The following describes the usage of `llava-run`:
 
 ```plain
-This container provides a convenient way to run
-[LLaVA](https://github.com/haotian-liu/LLaVA).
-
+This container provides a convenient way to run LLaVA. In addition to the LLaVA
+module, it includes the commands:
+  - `llava-run`, a command-line wrapper for LLaVA inference
+  - `hyak-llava-web`, a wrapper to launch the gradio web interface and issue an
+    SSH connection string you can copy to open a tunnel to your own computer.
+ 
 To run LLaVA with the `llava-run` script, use the following command:
-  apptainer run --nv --writable-tmpfs llava-container.sif llava-run
+  apptainer run --nv --writable-tmpfs \
+    oras://ghcr.io/maouw/llava-container/llava-container:latest \
+    llava-run [llava-run arguments]
 
 You must pass the "--nv" flag to enable GPU support.
 
 Depending on your intended use, you may also want to pass the "--bind" flag
-to mount a directory from the host system into the container, or add flags
-like "--contain" or "--cleanenv" to change the container runtime behavior.
+to mount a directory from the host system into the container.
 
-To specify a directory to use for the HuggingFace model cache, use the
-following command:
-  apptainer run -writable-tmpfs \
-          --nv \
-          --env HUGGINGFACE_HUB_CACHE=/path/to/cache \
-          llava-container.sif \
-          llava-run
+To specify a directory to use for the HuggingFace model cache and enable access
+to /gscratch, use the following command:
+  apptainer run --nv --writable-tmpfs \
+    --env HUGGINGFACE_HUB_CACHE=/path/to/cache \
+    --bind /gscratch \
+    oras://ghcr.io/maouw/llava-container/llava-container:latest \
+    llava-run [llava-run arguments]
 
-This container includes a script called "llava-run" that runs LLaVA with the
-arguments provided. The following describes the usage of this script:
+
+The following describes the usage of this script:
 
   llava-run [-h] [--model-path MODEL_PATH] [--model-base MODEL_BASE]
-    --image-file IMAGE_FILE --query QUERY [--conv-mode CONV_MODE]
-    [--sep SEP] [--temperature TEMPERATURE] [--top_p TOP_P]
-    [--num_beams NUM_BEAMS] [--max_new_tokens MAX_NEW_TOKENS]
+    --image-file IMAGE (--query QUERY | --chat) [--conv-mode CONV_MODE]
+    [--sep SEP] [--temperature TEMPERATURE] [--top_p N]
+    [--num_beams NUM_BEAMS] [--max_new_tokens N]
     [--load-8bit] [--load-4bit] [--device DEVICE]
     [--hf-cache-dir HF_CACHE_DIR]
 
@@ -192,19 +198,20 @@ arguments provided. The following describes the usage of this script:
     --model-base MODEL_BASE     Model base
     --image-file IMAGE_FILE     Image file or URL
     --query QUERY               Query
+	--chat						Chat mode 
     --conv-mode CONV_MODE       Conversation mode
     --sep SEP                   Separator for image files
     --temperature TEMPERATURE   Temperature
     --top_p TOP_P               Top p
     --num_beams NUM_BEAMS       Number of beams
-    --max_new_tokens MAX_NEW_TOKENS
-                                  Max new tokens
+    --max_new_tokens MAX_NEW_TOKENS Max new tokens
     --load-8bit                 Load 8bit model
     --load-4bit                 Load 4bit model
     --device DEVICE             cuda or cpu
     --hf-cache-dir HF_CACHE_DIR HuggingFace cache directory
   
-  For details on the arguments, see the LLaVA documentation.
+  For details on the arguments, see the LLaVA documentation and the usage infor-
+  mation for llava.eval.run_llava and llava.serve.cli.
 ```
 
-For details on the arguments, see the LLaVA documentation.
+See the [documentation](https://github.com/haotian-liu/LLaVA/blob/main/README.md) for LLaVA or the source code for [`llava/eval/run_llava.py`](https://github.com/haotian-liu/LLaVA/blob/main/llava/eval/run_llava.py) and [`llava/serve/cli.py`](https://github.com/haotian-liu/LLaVA/blob/main/llava/serve/cli.py) for more information on the arguments.
