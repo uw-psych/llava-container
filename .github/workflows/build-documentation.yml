@@ -25,8 +25,5 @@ jobs:
           ${GITHUB_WORKSPACE}/.github/workflows/scripts/esh  ${GITHUB_WORKSPACE}/README.md.esh > "${GITHUB_WORKSPACE}/README.md"            
           git config --local user.email "${{ github.event.sender.id }}+${{ github.event.sender.login }}@users.noreply.github.com"
           git config --local user.name ${{ github.event.sender.login }}
-
-          if ! git diff --quiet --stat README.md; then
-              git add README.md && commit_msg="Template README.md.esh for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\""
-          fi
+          git add README.md && commit_msg="Template README.md.esh for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\""
           [ -n "${commit_msg:-}" ] && git commit -am "${commit_msg}" && git push
