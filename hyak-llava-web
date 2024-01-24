@@ -23,12 +23,17 @@ if [[ -z "${GRADIO_CONTROLLER_PORT:-}" ]]; then
     GRADIO_CONTROLLER_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')" || { echo "Failed to get a random port. Exiting."; exit 1; }
 fi
 
+# GRADIO_WEB_PORT: the port number for the gradio controller (or leave it empty to use a random port)
+if [[ -z "${GRADIO_WEB_PORT:-}" ]]; then
+    GRADIO_WEB_PORT="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')" || { echo "Failed to get a random port. Exiting."; exit 1; }
+fi
+
 # Launch the controller:
-python -m llava.serve.controller --host 0.0.0.0 --port "${GRADIO_CONTROLLER_PORT}"  2> >(grep -viE 'INFO.*heart.*' || true >&2) 1> >(grep -viE 'INFO.*heart.*' || true >&1) &
+python -m llava.serve.controller --host 0.0.0.0 --port "${GRADIO_CONTROLLER_PORT}"  2> >(grep -v 'INFO' || true >&2) 1> >(grep -v 'INFO' || true >&1) &
 sleep 5
 
 # Launch the gradio web server:
-python -m llava.serve.gradio_web_server --controller "http://localhost:${GRADIO_CONTROLLER_PORT}" --model-list-mode reload 2> >(grep -viE 'INFO.*heart.*' || true >&2) 1> >(grep -viE 'INFO.*heart.*' || true >&1) &
+python -m llava.serve.gradio_web_server --controller "http://localhost:${GRADIO_CONTROLLER_PORT}" --port "${GRADIO_WEB_PORT}" --model-list-mode reload 2> >(grep -v 'INFO' || true >&2) 1> >(grep -v 'INFO' || true >&1) &
 sleep 5
 
 # Launch the model workers:
@@ -40,12 +45,12 @@ declare -a _model_ports=()
 for model_path in "${_model_paths[@]}"; do
     model_port="$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1])')" || { echo "Failed to get a random port. Exiting."; exit 1; }
     _model_ports+=("${model_port}")
-    python -m llava.serve.model_worker --host 0.0.0.0 --controller "http://localhost:${GRADIO_CONTROLLER_PORT}" --port "${model_port}" --worker "http://localhost:${model_port}" --model-path "${model_path}" 2> >(grep -viE 'INFO.*heart.*' || true >&2) 1> >(grep -viE 'INFO.*heart.*' || true >&1) &
+    python -m llava.serve.model_worker --host 0.0.0.0 --controller "http://localhost:${GRADIO_CONTROLLER_PORT}" --port "${model_port}" --worker "http://localhost:${model_port}" --model-path "${model_path}" 2> >(grep -v 'INFO' || true >&2) 1> >(grep -v 'INFO' || true >&1) &
     sleep 5
 done
 
 printf "To access the gradio web server, run the following command on your local machine:\n"
-printf 'ssh -o StrictHostKeyChecking=no -N -L %d:localhost:%d -J %s@klone.hyak.uw.edu %s@%s\n' "${LOCAL_HTTP_PORT}" "${GRADIO_CONTROLLER_PORT}" "${USER}" "${USER}" "$(uname -n)"
+printf 'ssh -o StrictHostKeyChecking=no -N -L %d:localhost:%d -J %s@klone.hyak.uw.edu %s@%s\n' "${LOCAL_HTTP_PORT}" "${GRADIO_WEB_PORT}" "${USER}" "${USER}" "$(uname -n)"
 
 # Keep the container running:
 while true; do
