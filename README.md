@@ -42,7 +42,7 @@ Then, you can run LLaVA. Let's try with the sample image on LLaVA's repository:
 ```bash
 # Run LLaVA:
 apptainer run \
-    oras://ghcr.io/maouw/llava-container/llava-container:latest \
+    oras://ghcr.io/uw-psych/llava-container/llava-container:latest \
     llava-run \
     --model-path liuhaotian/llava-v1.5-7b \
     --image-file "https://llava-vl.github.io/static/images/view.jpg" \
@@ -69,7 +69,7 @@ For chat, just pass `--chat` instead of `--query`:
 
 ```bash
 apptainer run \
-    oras://ghcr.io/maouw/llava-container/llava-container:latest \
+    oras://ghcr.io/uw-psych/llava-container/llava-container:latest \
     llava-run \
     --model-path liuhaotian/llava-v1.5-7b \
     --image-file "https://llava-vl.github.io/static/images/view.jpg" \
@@ -82,7 +82,7 @@ If you want to a different command, such as one of the commands that comes with 
 
 ```bash
 apptainer run \
-    oras://ghcr.io/maouw/llava-container/llava-container:latest \
+    oras://ghcr.io/uw-psych/llava-container/llava-container:latest \
     python -m llava.serve.cli
 ```
 
@@ -95,7 +95,7 @@ If you notice slowness when launching the container, you can try extracting the 
 SANDBOX="/tmp/${USER}/sandbox/llava" && mkdir -p "$(dirname "${SANDBOX}")"
 
 # Extract the container image to the sandbox:
-apptainer build --sandbox "${SANDBOX}"  oras://ghcr.io/maouw/llava-container/llava-container:latest
+apptainer build --sandbox "${SANDBOX}"  oras://ghcr.io/uw-psych/llava-container/llava-container:latest
 
 # Run LLaVA by passing the sandbox directory instead of the image URL:
 apptainer run \
@@ -112,7 +112,7 @@ Included in the container is a wrapper script for the LLaVA web interface. To ru
 
 ```bash
 apptainer run \
-    oras://ghcr.io/maouw/llava-container/llava-container:latest \
+    oras://ghcr.io/uw-psych/llava-container/llava-container:latest \
     hyak-llava-web
 ```
 
@@ -145,7 +145,7 @@ For example:
 export MODEL_PATHS='liuhaotian/llava-v1.5-13b' # Use the 13b model instead of the 7b model
 export LOCAL_HTTP_PORT=9000 # Use port 9000 instead of 8000
 apptainer run \
-    oras://ghcr.io/maouw/llava-container/llava-container:latest \
+    oras://ghcr.io/uw-psych/llava-container/llava-container:latest \
     hyak-llava-web
 ```
 
