@@ -33,30 +33,29 @@ jobs:
           
   
           # Build additions to commit message:
-          add_to_commit_msg=""
-  
+          commit_args=()
+
+          # Get the last commit message, if any:
+          last_commit_msg="$(git log -1 --pretty=format:%B || true)"
+
           if git diff --staged --name-only "README.md" | grep -Fq "README.md"; then
-            add_to_commit_msg="GITHUB_ACTION=\"${GITHUB_ACTION:-}\": Templated \"README.md\" for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\""
+            commit_args+=(-m "GITHUB_ACTION=\"${GITHUB_ACTION:-}\": Templated \"README.md\" for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\"")
           fi
 
           if git diff --staged --name-only "runscript.help" | grep -Fq "runscript.help"; then
-            add_to_commit_msg="${add_to_commit_message:+${add_to_commit_message:-}\n}GITHUB_ACTION=\"${GITHUB_ACTION:-}\": Templated \"runscript.help\" for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\""
+            commit_args+=("-m" "GITHUB_ACTION=\"${GITHUB_ACTION:-}\": Templated \"runscript.help\" for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\"")
           fi
+          
+          if (( "${#commit_args:-0}" > 1 )); then
 
-          # Don't append to commit message:
-          if [[ -n "${add_to_commit_msg:-}" ]]; then
+            # Don't append to commit message:
             if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]] && [[ "${GITHUB_REF}" =~ ^.*@.*$ ]]; then
               echo "Not appending commit messages because this is a tagged release" >&2
-              echo -e "Would have added:\n\"${add_to_commit_msg:-}\""
-            else
-              # Get the last commit message, if any:
-              last_commit_msg="$(git log -1 --pretty=format:%B || true)"
-              commit_msg="${last_commit_msg:+${last_commit_msg}\n}${add_to_commit_msg}"
-            
-              # Set up git config for push:
-              git config --local user.email "${{ github.event.sender.id }}+${{ github.event.sender.login }}@users.noreply.github.com"
-              git config --local user.name ${{ github.event.sender.login }}
-              git commit -am "${commit_msg}" && git push --force
+              commit_args=()
             fi
+
+            # Set up git config for push:
+            git config --local user.email "${{ github.event.sender.id }}+${{ github.event.sender.login }}@users.noreply.github.com"
+            git config --local user.name ${{ github.event.sender.login }}
+            git commit -a "${last_commit_msg:+-m ${last_commit_msg:-}}" "${commit_args[@]}"  && git push --force
           fi
-        

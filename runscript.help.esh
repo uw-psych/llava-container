@@ -52,7 +52,7 @@ options:
   --stack-sep SEP       Internal separator for stacked image files (default:
                         ",")
   --temperature FLOAT   Temperature (default: 0.2)
-  --top_p FLOAT         Top p (default: 0.9)
+  --top_p FLOAT         Top p (default: 1.0)
   --num_beams N         Number of beams (default: 1)
   --max_new_tokens N    Max new tokens (default: 512)
   --load-8bit           Load 8bit model
