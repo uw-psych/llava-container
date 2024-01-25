@@ -242,7 +242,7 @@ if __name__ == "__main__":
         help="Temperature (default: 0.2)",
     )
     parser.add_argument(
-        "--top_p", metavar="FLOAT", type=float, default=0.9, help="Top p (default: 0.9)"
+        "--top_p", metavar="FLOAT", type=float, default=1.0, help="Top p (default: 1.0)"
     )
     parser.add_argument(
         "--num_beams",
