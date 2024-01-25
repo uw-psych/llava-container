@@ -6,7 +6,7 @@ module, it includes the commands:
  
 To run LLaVA with the `llava-run` script, use the following command:
   apptainer run --nv --writable-tmpfs \
-    oras://ghcr.io/maouw/llava-container/llava-container:latest \
+    oras://ghcr.io/uw-psych/llava-container/llava-container:latest \
     llava-run [llava-run arguments]
 
 You must pass the "--nv" flag to enable GPU support.
@@ -19,7 +19,7 @@ to /gscratch, use the following command:
   apptainer run --nv --writable-tmpfs \
     --env HUGGINGFACE_HUB_CACHE=/path/to/cache \
     --bind /gscratch \
-    oras://ghcr.io/maouw/llava-container/llava-container:latest \
+    oras://ghcr.io/uw-psych/llava-container/llava-container:latest \
     llava-run [llava-run arguments]
 
 
