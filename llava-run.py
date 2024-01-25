@@ -57,19 +57,6 @@ def load_images(image_files):
 def eval_model_single(
     tokenizer, model, image_processor, context_len, query, image_file, args
 ):
-    # Model
-    disable_torch_init()
-
-    model_name = get_model_name_from_path(args.model_path)
-    tokenizer, model, image_processor, context_len = load_pretrained_model(
-        args.model_path,
-        args.model_base,
-        model_name,
-        args.load_8bit,
-        args.load_4bit,
-        device=args.device,
-    )
-
     qs = query
     image_token_se = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN
     if IMAGE_PLACEHOLDER in qs:
@@ -82,24 +69,6 @@ def eval_model_single(
             qs = image_token_se + "\n" + qs
         else:
             qs = DEFAULT_IMAGE_TOKEN + "\n" + qs
-
-    if "llama-2" in model_name.lower():
-        conv_mode = "llava_llama_2"
-    elif "v1" in model_name.lower():
-        conv_mode = "llava_v1"
-    elif "mpt" in model_name.lower():
-        conv_mode = "mpt"
-    else:
-        conv_mode = "llava_v0"
-
-    if args.conv_mode is not None and conv_mode != args.conv_mode:
-        print(
-            "[WARNING] the auto inferred conversation mode is {}, while `--conv-mode` is {}, using {}".format(
-                conv_mode, args.conv_mode, args.conv_mode
-            )
-        )
-    else:
-        args.conv_mode = conv_mode
 
     conv = conv_templates[args.conv_mode].copy()
     conv.append_message(conv.roles[0], qs)
@@ -164,6 +133,24 @@ def eval_model_multiple(args):
         device=args.device,
     )
 
+    if "llama-2" in model_name.lower():
+        conv_mode = "llava_llama_2"
+    elif "v1" in model_name.lower():
+        conv_mode = "llava_v1"
+    elif "mpt" in model_name.lower():
+        conv_mode = "mpt"
+    else:
+        conv_mode = "llava_v0"
+
+    if args.conv_mode is not None and conv_mode != args.conv_mode:
+        print(
+            "[WARNING] the auto inferred conversation mode is {}, while `--conv-mode` is {}, using {}".format(
+                conv_mode, args.conv_mode, args.conv_mode
+            )
+        )
+    else:
+        args.conv_mode = conv_mode
+
     if len(args.image_file) > 1 or len(args.query) > 1:
         args.json = True
 
@@ -223,8 +210,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--conv-mode",
         type=str,
-        default="v0",
-        help="Conversation mode (default: v0)",
+        default=None,
+        help="Conversation mode",
         choices=[
             "v0",
             "v1",
