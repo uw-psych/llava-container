@@ -32,8 +32,8 @@ import re
 import os
 
 
-def image_parser(args):
-    out = args.image_file.split(args.sep)
+def image_parser(image_file):
+    out = image_file.split(args.sep)
     return out
 
 
@@ -54,7 +54,9 @@ def load_images(image_files):
     return out
 
 
-def eval_model_single(tokenizer, model, image_processor, context_len, query, args):
+def eval_model_single(
+    tokenizer, model, image_processor, context_len, query, image_file, args
+):
     # Model
     disable_torch_init()
 
@@ -104,7 +106,7 @@ def eval_model_single(tokenizer, model, image_processor, context_len, query, arg
     conv.append_message(conv.roles[1], None)
     prompt = conv.get_prompt()
 
-    image_files = image_parser(args)
+    image_files = image_file.split(args.sep)
     images = load_images(image_files)
     images_tensor = process_images(images, image_processor, model.config).to(
         model.device, dtype=torch.float16
@@ -194,10 +196,9 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--image",
+        "--image-file",
         metavar="IMAGE",
         type=str,
-        dest="image_file",
         required=True,
         action="store",
         nargs="+",
@@ -290,7 +291,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    print(repr(args))
     if args.chat and len(args.image) > 1:
         raise ValueError("Batch processing of multiple images not allowed in chat mode")
     if args.chat and args.json:
