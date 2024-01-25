@@ -46,7 +46,7 @@ jobs:
             commit_args+=("-m" "GITHUB_ACTION=\"${GITHUB_ACTION:-}\": Templated \"runscript.help\" for GITHUB_REPOSITORY=\"${GITHUB_REPOSITORY}\"")
           fi
           
-          if (( "${#commit_args[@]:-0}" > 1 )); then
+          if (( "${#commit_args[@]}" > 1 )); then
 
             # Don't append to commit message:
             if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]] && [[ "${GITHUB_REF}" =~ ^.*@.*$ ]]; then
