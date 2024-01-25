@@ -170,7 +170,7 @@ def eval_model_multiple(args):
     for i in args.image_file:
         for q in args.query:
             outputs = eval_model_single(
-                tokenizer, model, image_processor, context_len, q, args
+                tokenizer, model, image_processor, context_len, q, i, args
             )
             if args.json:
                 print(json.dumps({"image": i, "query": q, "output": outputs}))
