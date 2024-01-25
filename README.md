@@ -185,30 +185,40 @@ to /gscratch, use the following command:
 
 The following describes the usage of this script:
 
-  llava-run [-h] [--model-path MODEL_PATH] [--model-base MODEL_BASE]
-    --image-file IMAGE (--query QUERY | --chat) [--conv-mode CONV_MODE]
-    [--sep SEP] [--temperature TEMPERATURE] [--top_p N]
-    [--num_beams NUM_BEAMS] [--max_new_tokens N]
-    [--load-8bit] [--load-4bit] [--device DEVICE]
-    [--hf-cache-dir HF_CACHE_DIR]
+llava-run [-h] [--model-path PATH] [--model-base PATH] --image-file
+	IMAGE [IMAGE ...] (--query QUERY [QUERY ...] | --chat)
+	[--json]
+	[--conv-mode {v0,v1,vicuna_v1,llama_2,plain,v0_plain,llava_v0,v0_mmtag,llava_v1,v1_mmtag,llava_llama_2,mpt}]
+	[--stack-sep SEP] [--temperature FLOAT] [--top_p FLOAT]
+	[--num_beams N] [--max_new_tokens N]
+	[--load-8bit | --load-4bit] [--device {cuda,cpu}]
+	[--hf-cache-dir DIR]
 
-  options:
-    -h, --help            show this help message and exit
-    --model-path MODEL_PATH     Model path
-    --model-base MODEL_BASE     Model base
-    --image-file IMAGE_FILE     Image file or URL
-    --query QUERY               Query
-	--chat						Chat mode 
-    --conv-mode CONV_MODE       Conversation mode
-    --sep SEP                   Separator for image files
-    --temperature TEMPERATURE   Temperature
-    --top_p TOP_P               Top p
-    --num_beams NUM_BEAMS       Number of beams
-    --max_new_tokens MAX_NEW_TOKENS Max new tokens
-    --load-8bit                 Load 8bit model
-    --load-4bit                 Load 4bit model
-    --device DEVICE             cuda or cpu
-    --hf-cache-dir HF_CACHE_DIR HuggingFace cache directory
+options:
+  -h, --help            show this help message and exit
+  --model-path PATH     Model path
+  --model-base PATH     Model base (required for 'lora' models)
+  --image-file IMAGE [IMAGE ...]
+                        Path or URL to image (provide multiple to process in
+                        batch; use --sep delimiter within paths to stack image
+                        inputs )
+  --query QUERY [QUERY ...]
+                        Query (can be specified multiple times, e.g. --query a
+                        --query b)
+  --chat                Use chat instead of query
+  --json                Produce JSON output
+  --conv-mode {v0,v1,vicuna_v1,llama_2,plain,v0_plain,llava_v0,v0_mmtag,llava_v1,v1_mmtag,llava_llama_2,mpt}
+                        Conversation mode
+  --stack-sep SEP       Internal separator for stacked image files (default:
+                        ",")
+  --temperature FLOAT   Temperature (default: 0.2)
+  --top_p FLOAT         Top p (default: 1.0)
+  --num_beams N         Number of beams (default: 1)
+  --max_new_tokens N    Max new tokens (default: 512)
+  --load-8bit           Load 8bit model
+  --load-4bit           Load 4bit model
+  --device {cuda,cpu}   Device to use
+  --hf-cache-dir DIR    HuggingFace cache directory
   
   For details on the arguments, see the LLaVA documentation and the usage infor-
   mation for llava.eval.run_llava and llava.serve.cli.
